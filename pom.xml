@@ -29,6 +29,9 @@
     <properties>
         <java.version>25</java.version>
         <hibernate-spatial.version>7.0.0.Final</hibernate-spatial.version>
+        <thymeleaf-layout-dialect.version>3.4.0</thymeleaf-layout-dialect.version>
+        <webjars-htmx.version>2.0.8</webjars-htmx.version>
+        <webjars-leaflet.version>1.9.4</webjars-leaflet.version>
     </properties>
     <dependencies>
         <dependency>
@@ -46,6 +49,33 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf Template Engine -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf Layout Dialect -->
+        <dependency>
+            <groupId>nz.net.ultraq.thymeleaf</groupId>
+            <artifactId>thymeleaf-layout-dialect</artifactId>
+            <version>${thymeleaf-layout-dialect.version}</version>
+        </dependency>
+
+        <!-- WebJars for HTMX -->
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>htmx.org</artifactId>
+            <version>${webjars-htmx.version}</version>
+        </dependency>
+
+        <!-- WebJars for Leaflet Maps -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>leaflet</artifactId>
+            <version>${webjars-leaflet.version}</version>
         </dependency>
 
         <!-- PostgreSQL Driver -->

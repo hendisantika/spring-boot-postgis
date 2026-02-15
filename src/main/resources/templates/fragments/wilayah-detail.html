@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="wilayah-detail">
+        <div th:if="${wilayah != null}">
+            <h4 class="w3-text-theme" th:text="${wilayah.nama}">Wilayah Name</h4>
+
+            <table class="w3-table w3-bordered w3-small">
+                <tbody>
+                    <tr>
+                        <td class="w3-light-grey"><b>Kode</b></td>
+                        <td th:text="${wilayah.kode}">Code</td>
+                    </tr>
+                    <tr>
+                        <td class="w3-light-grey"><b>Level</b></td>
+                        <td>
+                            <span class="w3-tag w3-round"
+                                  th:classappend="${wilayah.level == 'Provinsi' ? 'w3-theme' :
+                                                  wilayah.level == 'Kabupaten/Kota' ? 'w3-green' :
+                                                  wilayah.level == 'Kecamatan' ? 'w3-blue' : 'w3-orange'}"
+                                  th:text="${wilayah.level}">
+                                Level
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${wilayah.ibukota}">
+                        <td class="w3-light-grey"><b>Ibukota</b></td>
+                        <td th:text="${wilayah.ibukota}">Capital</td>
+                    </tr>
+                    <tr th:if="${wilayah.lat != null and wilayah.lng != null}">
+                        <td class="w3-light-grey"><b>Koordinat</b></td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(wilayah.lat, 1, 4)}">Lat</span>,
+                            <span th:text="${#numbers.formatDecimal(wilayah.lng, 1, 4)}">Lng</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${wilayah.luas != null}">
+                        <td class="w3-light-grey"><b>Luas</b></td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(wilayah.luas, 0, 2)}">Area</span> km²
+                        </td>
+                    </tr>
+                    <tr th:if="${wilayah.penduduk != null}">
+                        <td class="w3-light-grey"><b>Penduduk</b></td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(wilayah.penduduk, 0, 0)}">Population</span> jiwa
+                        </td>
+                    </tr>
+                    <tr th:if="${wilayah.elv != null and wilayah.elv != 0}">
+                        <td class="w3-light-grey"><b>Elevasi</b></td>
+                        <td>
+                            <span th:text="${wilayah.elv}">Elevation</span> m
+                        </td>
+                    </tr>
+                    <tr th:if="${wilayah.tz != null}">
+                        <td class="w3-light-grey"><b>Zona Waktu</b></td>
+                        <td>
+                            WIB+<span th:text="${wilayah.tz}">Timezone</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="w3-button w3-theme w3-block w3-margin-top"
+                    onclick="focusOnMap()">
+                <i class="fa fa-map-marker-alt"></i> Lihat di Peta
+            </button>
+        </div>
+
+        <div th:if="${wilayah == null}" class="w3-text-grey w3-center">
+            <p><i class="fa fa-arrow-up"></i> Pilih wilayah untuk melihat detail</p>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function focusOnMap() {
+            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

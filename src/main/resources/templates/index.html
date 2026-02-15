@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Data Wilayah Indonesia</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Main Container -->
+        <div class="w3-container" style="max-width:1400px; margin: auto; padding: 20px;">
+
+            <!-- Header Info -->
+            <div class="w3-card-4 w3-margin-bottom">
+                <header class="w3-container w3-theme">
+                    <h3><i class="fa fa-map-marked-alt"></i> Data Wilayah Administrasi Pemerintahan Indonesia</h3>
+                </header>
+                <div class="w3-container w3-padding">
+                    <p><b>Kode dan Data Wilayah Administrasi Pemerintahan Indonesia</b> dengan dukungan PostGIS untuk visualisasi peta interaktif</p>
+                    <p class="w3-text-grey">Pilih Provinsi, Kabupaten/Kota, Kecamatan, dan Desa/Kelurahan untuk melihat data lengkap dan visualisasi peta dengan batas wilayah.</p>
+                </div>
+            </div>
+
+            <div class="w3-row">
+                <!-- Left Panel - Selectors -->
+                <div class="w3-col m4 l3">
+                    <div class="w3-card-4 w3-margin-bottom info-card">
+                        <header class="w3-container w3-theme-l1">
+                            <h4><i class="fa fa-layer-group"></i> Pilih Wilayah</h4>
+                        </header>
+                        <div class="w3-container w3-padding">
+                            <!-- Provinsi Select -->
+                            <label class="w3-text-theme"><b><i class="fa fa-map"></i> Provinsi</b></label>
+                            <select class="w3-select w3-border w3-margin-bottom" id="provinsi-select"
+                                    onchange="handleProvinsiChange(this.value);">
+                                <option value="" disabled selected>Pilih Provinsi</option>
+                                <option th:each="prov : ${provinsiList}"
+                                        th:value="${prov.kode}"
+                                        th:text="${prov.kode + ' - ' + prov.nama}">
+                                    Provinsi
+                                </option>
+                            </select>
+
+                            <!-- Kabupaten/Kota Select -->
+                            <div id="kabupaten-container">
+                                <label class="w3-text-theme"><b><i class="fa fa-city"></i> Kabupaten/Kota</b></label>
+                                <select class="w3-select w3-border w3-margin-bottom" id="kabupaten-select" disabled>
+                                    <option value="">Pilih Kabupaten/Kota</option>
+                                </select>
+                            </div>
+
+                            <!-- Kecamatan Select -->
+                            <div id="kecamatan-container">
+                                <label class="w3-text-theme"><b><i class="fa fa-building"></i> Kecamatan</b></label>
+                                <select class="w3-select w3-border w3-margin-bottom" id="kecamatan-select" disabled>
+                                    <option value="">Pilih Kecamatan</option>
+                                </select>
+                            </div>
+
+                            <!-- Desa/Kelurahan Select -->
+                            <div id="desa-container">
+                                <label class="w3-text-theme"><b><i class="fa fa-home"></i> Desa/Kelurahan</b></label>
+                                <select class="w3-select w3-border w3-margin-bottom" id="desa-select" disabled>
+                                    <option value="">Pilih Desa/Kelurahan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Panel -->
+                    <div class="w3-card-4 info-card">
+                        <header class="w3-container w3-theme-l2">
+                            <h4><i class="fa fa-info-circle"></i> Detail Wilayah</h4>
+                        </header>
+                        <div class="w3-container w3-padding" id="detail-panel">
+                            <p class="w3-text-grey w3-center"><i class="fa fa-arrow-up"></i> Pilih wilayah untuk melihat detail</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel - Map -->
+                <div class="w3-col m8 l9">
+                    <div class="w3-card-4 info-card">
+                        <header class="w3-container w3-theme-l1">
+                            <h4><i class="fa fa-globe-asia"></i> Peta Wilayah Indonesia (PostGIS)</h4>
+                        </header>
+                        <div class="w3-container w3-padding-small">
+                            <div id="map"></div>
+                        </div>
+                        <div class="w3-container w3-padding-small">
+                            <div class="w3-bar">
+                                <button class="w3-button w3-theme-l4 w3-margin-right" onclick="resetMapView()">
+                                    <i class="fa fa-redo"></i> Reset View
+                                </button>
+                                <button class="w3-button w3-theme-l4 w3-margin-right" onclick="showProvinces()">
+                                    <i class="fa fa-map-marker-alt"></i> Tampilkan Provinsi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="w3-row-padding w3-margin-top">
+                        <div class="w3-col s6 m3">
+                            <div class="w3-card-4 w3-center w3-theme-l4 info-card" style="padding: 20px;">
+                                <h2 class="w3-text-theme"><b>38</b></h2>
+                                <p>Provinsi</p>
+                            </div>
+                        </div>
+                        <div class="w3-col s6 m3">
+                            <div class="w3-card-4 w3-center w3-green info-card" style="padding: 20px;">
+                                <h2 class="w3-text-white"><b>514</b></h2>
+                                <p class="w3-text-white">Kabupaten/Kota</p>
+                            </div>
+                        </div>
+                        <div class="w3-col s6 m3">
+                            <div class="w3-card-4 w3-center w3-blue info-card" style="padding: 20px;">
+                                <h2 class="w3-text-white"><b>7,069</b></h2>
+                                <p class="w3-text-white">Kecamatan</p>
+                            </div>
+                        </div>
+                        <div class="w3-col s6 m3">
+                            <div class="w3-card-4 w3-center w3-orange info-card" style="padding: 20px;">
+                                <h2 class="w3-text-white"><b>81,911</b></h2>
+                                <p class="w3-text-white">Desa/Kelurahan</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="extra-js">
+        <!-- Leaflet JS -->
+        <script th:src="@{/webjars/leaflet/1.9.4/dist/leaflet.js}"></script>
+
+        <script th:inline="javascript">
+            // Initialize map
+            const map = L.map('map').setView([-2.5489, 118.0149], 5);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+
+            const markersLayer = L.layerGroup().addTo(map);
+            const boundaryLayer = L.layerGroup().addTo(map);
+
+            // Handle provinsi selection
+            function handleProvinsiChange(kode) {
+                console.log('Province selected:', kode);
+                if (kode) {
+                    loadDetail(kode);
+
+                    if (typeof htmx !== 'undefined') {
+                        htmx.ajax('GET', `/wilayah/kabupaten-select/${kode}`, {
+                            target: '#kabupaten-container',
+                            swap: 'innerHTML'
+                        });
+                    }
+                    resetKecamatanSelect();
+                    resetDesaSelect();
+                }
+            }
+
+            // Handle kabupaten selection
+            function handleKabupatenChange(kode) {
+                if (kode) {
+                    loadDetail(kode);
+
+                    if (typeof htmx !== 'undefined') {
+                        htmx.ajax('GET', `/wilayah/kecamatan-select/${kode}`, {
+                            target: '#kecamatan-container',
+                            swap: 'innerHTML'
+                        });
+                    }
+                    resetDesaSelect();
+                }
+            }
+
+            // Handle kecamatan selection
+            function handleKecamatanChange(kode) {
+                if (kode) {
+                    loadDetail(kode);
+
+                    if (typeof htmx !== 'undefined') {
+                        htmx.ajax('GET', `/wilayah/desa-select/${kode}`, {
+                            target: '#desa-container',
+                            swap: 'innerHTML'
+                        });
+                    }
+                }
+            }
+
+            // Handle desa/kelurahan selection
+            function handleDesaChange(kode) {
+                if (kode) {
+                    loadDetail(kode);
+                }
+            }
+
+            // Reset select helpers
+            function resetKabupatenSelect() {
+                document.getElementById('kabupaten-container').innerHTML = `
+                    <label class="w3-text-theme"><b><i class="fa fa-city"></i> Kabupaten/Kota</b></label>
+                    <select class="w3-select w3-border w3-margin-bottom" id="kabupaten-select" disabled>
+                        <option value="">Pilih Kabupaten/Kota</option>
+                    </select>
+                `;
+            }
+
+            function resetKecamatanSelect() {
+                document.getElementById('kecamatan-container').innerHTML = `
+                    <label class="w3-text-theme"><b><i class="fa fa-building"></i> Kecamatan</b></label>
+                    <select class="w3-select w3-border w3-margin-bottom" id="kecamatan-select" disabled>
+                        <option value="">Pilih Kecamatan</option>
+                    </select>
+                `;
+            }
+
+            function resetDesaSelect() {
+                document.getElementById('desa-container').innerHTML = `
+                    <label class="w3-text-theme"><b><i class="fa fa-home"></i> Desa/Kelurahan</b></label>
+                    <select class="w3-select w3-border w3-margin-bottom" id="desa-select" disabled>
+                        <option value="">Pilih Desa/Kelurahan</option>
+                    </select>
+                `;
+            }
+
+            // Load detail for selected wilayah
+            function loadDetail(kode) {
+                if (kode) {
+                    // Load detail panel
+                    if (typeof htmx !== 'undefined') {
+                        htmx.ajax('GET', `/wilayah/detail/${kode}`, {target: '#detail-panel'});
+                    }
+
+                    // Load boundaries
+                    fetch(`/wilayah/api/boundary/${kode}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            markersLayer.clearLayers();
+                            boundaryLayer.clearLayers();
+
+                            // Add marker if coordinates available
+                            if (data.lat && data.lng) {
+                                L.marker([data.lat, data.lng])
+                                    .bindPopup(`<b>${data.nama}</b><br>Kode: ${data.kode}`)
+                                    .addTo(markersLayer);
+                            }
+
+                            // Display boundary if available
+                            if (data.coordinates) {
+                                try {
+                                    const geoJson = JSON.parse(data.coordinates);
+                                    const layer = L.geoJSON(geoJson, {
+                                        style: {
+                                            color: '#3388ff',
+                                            fillColor: '#3388ff',
+                                            fillOpacity: 0.2,
+                                            weight: 2
+                                        }
+                                    })
+                                    .bindPopup(`<b>${data.nama}</b><br>${data.level}`)
+                                    .addTo(boundaryLayer);
+
+                                    map.fitBounds(layer.getBounds(), {padding: [50, 50]});
+                                } catch (e) {
+                                    console.error('Error parsing boundary:', e);
+                                    if (data.lat && data.lng) {
+                                        map.setView([data.lat, data.lng], 10);
+                                    }
+                                }
+                            } else if (data.lat && data.lng) {
+                                map.setView([data.lat, data.lng], 10);
+                            }
+                        })
+                        .catch(error => console.error('Error loading boundaries:', error));
+                }
+            }
+
+            // Reset map view
+            function resetMapView() {
+                map.setView([-2.5489, 118.0149], 5);
+                markersLayer.clearLayers();
+                boundaryLayer.clearLayers();
+            }
+
+            // Show all provinces
+            function showProvinces() {
+                fetch('/wilayah/api/all')
+                    .then(response => response.json())
+                    .then(data => {
+                        markersLayer.clearLayers();
+                        boundaryLayer.clearLayers();
+                        const provinces = data.filter(w => w.kode.length === 2);
+                        provinces.forEach(prov => {
+                            if (prov.lat && prov.lng) {
+                                L.marker([prov.lat, prov.lng])
+                                    .bindPopup(`<b>${prov.nama}</b><br>Kode: ${prov.kode}`)
+                                    .addTo(markersLayer);
+                            }
+                        });
+                        map.setView([-2.5489, 118.0149], 5);
+                    });
+            }
+
+            // Load provinces on start
+            showProvinces();
+        </script>
+    </th:block>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title != null ? title + ' - Data Wilayah Indonesia' : 'Data Wilayah Indonesia'}">Data Wilayah Indonesia</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Data Wilayah Administrasi Pemerintahan Indonesia - Peta interaktif dengan informasi lengkap provinsi, kabupaten, kecamatan, dan desa di Indonesia">
+    <meta name="keywords" content="wilayah indonesia, peta indonesia, data administrasi, provinsi, kabupaten, kecamatan, desa, postgis">
+    <meta name="author" content="Hendi Santika">
+    <meta name="theme-color" content="#3f51b5">
+
+    <!-- W3.CSS Framework -->
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" id="theme-css" href="https://www.w3schools.com/lib/w3-theme-indigo.css">
+
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}">
+
+    <!-- Custom CSS -->
+    <style>
+        body, h1, h2, h3, h4, h5, h6 {
+            font-family: "Raleway", sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+        }
+
+        #map {
+            height: 650px;
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .w3-select {
+            cursor: pointer;
+        }
+
+        .w3-select:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .theme-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            display: inline-block;
+            margin: 4px;
+            transition: transform 0.2s;
+        }
+
+        .theme-button:hover {
+            transform: scale(1.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .info-card {
+            transition: all 0.3s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        .htmx-request .loading-spinner {
+            display: block;
+        }
+
+        select.w3-select option {
+            padding: 8px;
+        }
+
+        .w3-dropdown-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        footer {
+            margin-top: 50px;
+        }
+    </style>
+
+    <th:block layout:fragment="extra-css"></th:block>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <div class="w3-top">
+        <div class="w3-bar w3-theme w3-left-align w3-large">
+            <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-white w3-large w3-theme"
+               href="javascript:void(0);" onclick="openNav()">
+                <i class="fa fa-bars"></i>
+            </a>
+            <a th:href="@{/}" class="w3-bar-item w3-button w3-padding-large w3-theme">
+                <b>DATA WILAYAH INDONESIA</b>
+            </a>
+
+            <!-- Theme Selector -->
+            <div class="w3-dropdown-hover w3-hide-small w3-right">
+                <button class="w3-button w3-padding-large">
+                    <i class="fa fa-palette"></i> Tema <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="w3-dropdown-content w3-card-4 w3-bar-block" style="right:0; min-width: 300px;">
+                    <div class="w3-container w3-padding">
+                        <p><b>Pilih Tema Warna:</b></p>
+                        <div class="w3-row">
+                            <span class="theme-button" style="background-color:#000" onclick="changeTheme('black')" title="Black"></span>
+                            <span class="theme-button" style="background-color:#795548" onclick="changeTheme('brown')" title="Brown"></span>
+                            <span class="theme-button" style="background-color:#e91e63" onclick="changeTheme('pink')" title="Pink"></span>
+                            <span class="theme-button" style="background-color:#ff9800" onclick="changeTheme('orange')" title="Orange"></span>
+                            <span class="theme-button" style="background-color:#ffc107" onclick="changeTheme('amber')" title="Amber"></span>
+                            <span class="theme-button" style="background-color:#cddc39" onclick="changeTheme('lime')" title="Lime"></span>
+                        </div>
+                        <div class="w3-row">
+                            <span class="theme-button" style="background-color:#4caf50" onclick="changeTheme('green')" title="Green"></span>
+                            <span class="theme-button" style="background-color:#009688" onclick="changeTheme('teal')" title="Teal"></span>
+                            <span class="theme-button" style="background-color:#9c27b0" onclick="changeTheme('purple')" title="Purple"></span>
+                            <span class="theme-button" style="background-color:#3f51b5" onclick="changeTheme('indigo')" title="Indigo"></span>
+                            <span class="theme-button" style="background-color:#2196f3" onclick="changeTheme('blue')" title="Blue"></span>
+                            <span class="theme-button" style="background-color:#00bcd4" onclick="changeTheme('cyan')" title="Cyan"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (with top margin for fixed navbar) -->
+    <div style="margin-top:65px">
+        <div layout:fragment="content">
+            <p>Default content</p>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner">
+        <div class="w3-spin w3-jumbo w3-text-theme">
+            <i class="fa fa-spinner"></i>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w3-container w3-theme-dark w3-padding-16">
+        <div class="w3-center">
+            <p class="w3-large"><b>Data Wilayah Indonesia dengan PostGIS</b></p>
+            <p>Powered by Spring Boot 4, Thymeleaf, HTMX, PostGIS & Leaflet</p>
+            <p class="w3-small">
+                Data: BPS Indonesia (2020) |
+                <a href="https://github.com/hendisantika" target="_blank" class="w3-hover-text-light-blue">@hendisantika</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- HTMX -->
+    <script th:src="@{/webjars/htmx.org/2.0.8/dist/htmx.min.js}"></script>
+
+    <!-- Theme Switcher Script -->
+    <script>
+        function changeTheme(theme) {
+            const themeCSS = document.getElementById('theme-css');
+            themeCSS.href = 'https://www.w3schools.com/lib/w3-theme-' + theme + '.css';
+            localStorage.setItem('selectedTheme', theme);
+        }
+
+        // Load saved theme
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'indigo';
+            changeTheme(savedTheme);
+        });
+
+        // Mobile nav toggle
+        function openNav() {
+            const nav = document.getElementById("mobileNav");
+            if (nav && nav.className.indexOf("w3-show") == -1) {
+                nav.className += " w3-show";
+            } else if (nav) {
+                nav.className = nav.className.replace(" w3-show", "");
+            }
+        }
+    </script>
+
+    <th:block layout:fragment="extra-js"></th:block>
+</body>
+</html>
