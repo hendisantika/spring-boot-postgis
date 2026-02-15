@@ -161,6 +161,22 @@ function resetMapView() {
     map.setView([-2.5489, 118.0149], 5);
     markersLayer.clearLayers();
     boundaryLayer.clearLayers();
+
+    // Reset all dropdowns
+    var provinsiSelect = document.getElementById('provinsi-select');
+    if (provinsiSelect) {
+        provinsiSelect.selectedIndex = 0;
+    }
+    resetKabupatenSelect();
+    resetKecamatanSelect();
+    resetDesaSelect();
+
+    // Clear detail panel
+    document.getElementById('detail-panel').innerHTML =
+        '<p class="w3-text-grey w3-center"><i class="fa fa-arrow-up"></i> Pilih wilayah untuk melihat detail</p>';
+
+    // Show provinces again
+    showProvinces();
 }
 
 // Show all provinces
