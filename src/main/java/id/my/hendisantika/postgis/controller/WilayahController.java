@@ -9,7 +9,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -84,8 +86,22 @@ public class WilayahController {
 
     @GetMapping("/api/all")
     @ResponseBody
-    public ResponseEntity<List<WilayahLevel12>> getAllWithBoundaries() {
-        return ResponseEntity.ok(wilayahService.getAll());
+    public ResponseEntity<List<Map<String, Object>>> getAllWithBoundaries() {
+        List<Map<String, Object>> result = wilayahService.getAllProvinsi().stream()
+                .map(w -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("kode", w.getKode());
+                    map.put("nama", w.getNama());
+                    map.put("ibukota", w.getIbukota());
+                    map.put("lat", w.getLat());
+                    map.put("lng", w.getLng());
+                    map.put("luas", w.getLuas());
+                    map.put("penduduk", w.getPenduduk());
+                    map.put("level", w.getLevel());
+                    return map;
+                })
+                .toList();
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/kabupaten-select/{provinsiKode}")

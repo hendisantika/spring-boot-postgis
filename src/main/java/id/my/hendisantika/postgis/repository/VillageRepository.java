@@ -23,6 +23,6 @@ public interface VillageRepository extends JpaRepository<Village, Integer> {
 
     Optional<Village> findByKode(String kode);
 
-    @Query(value = "SELECT ST_AsGeoJSON(geom) FROM all_villages WHERE kode = :kode", nativeQuery = true)
+    @Query(value = "SELECT ST_AsGeoJSON(geom) FROM all_villages WHERE kode = :kode LIMIT 1", nativeQuery = true)
     String findGeometryAsGeoJSON(@Param("kode") String kode);
 }
