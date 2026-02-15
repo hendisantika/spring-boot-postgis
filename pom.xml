@@ -73,7 +73,7 @@
 
         <!-- WebJars for Leaflet Maps -->
         <dependency>
-            <groupId>org.webjars</groupId>
+            <groupId>org.webjars.npm</groupId>
             <artifactId>leaflet</artifactId>
             <version>${webjars-leaflet.version}</version>
         </dependency>
