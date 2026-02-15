@@ -61,6 +61,8 @@ convert_file() {
         -e 's/float/REAL/g' \
         -e 's/longtext/TEXT/g' \
         -e 's/COMMENT=/-- /g' \
+        -e "s/UNHEX('/decode('/g" \
+        -e "s/')/', 'hex')/g" \
         "$input_file" > "$output_file"
 
     echo -e "${GREEN}✓ Created: $(basename "$output_file") ($(du -h "$output_file" | cut -f1))${NC}"
