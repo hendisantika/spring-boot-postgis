@@ -25,4 +25,8 @@ public interface SubDistrictRepository extends JpaRepository<SubDistrict, Intege
 
     @Query(value = "SELECT ST_AsGeoJSON(geom) FROM idn_admbnda_adm3_2023 WHERE kode_kec = :kode LIMIT 1", nativeQuery = true)
     String findGeometryAsGeoJSON(@Param("kode") String kode);
+
+    @Query(value = "SELECT ST_AsGeoJSON(ST_Union(geom)) FROM idn_admbnda_adm3_2023 WHERE kode_kk = :kodeKk", nativeQuery = true)
+    String findKabupatenBoundaryAsGeoJSON(@Param("kodeKk") String kodeKk);
+
 }

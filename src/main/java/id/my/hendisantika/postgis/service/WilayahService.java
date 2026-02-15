@@ -118,7 +118,16 @@ public class WilayahService {
                     .lat(wilayah.getLat())
                     .lng(wilayah.getLng());
 
-            if (wilayah.getPath() != null && !wilayah.getPath().isEmpty()) {
+            if (kodeLength == 5) {
+                // Kabupaten: compute boundary from ST_Union of kecamatan geometries
+                String geoJson = subDistrictRepository.findKabupatenBoundaryAsGeoJSON(kode);
+                if (geoJson != null && !geoJson.isEmpty()) {
+                    builder.coordinates(geoJson);
+                } else if (wilayah.getPath() != null && !wilayah.getPath().isEmpty()) {
+                    builder.coordinates(wilayah.getPath());
+                }
+            } else if (wilayah.getPath() != null && !wilayah.getPath().isEmpty()) {
+                // Provinsi: use path field (ST_Union too expensive for hundreds of kecamatan)
                 builder.coordinates(wilayah.getPath());
             }
 
