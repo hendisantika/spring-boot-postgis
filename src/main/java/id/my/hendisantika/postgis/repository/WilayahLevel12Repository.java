@@ -24,13 +24,13 @@ public interface WilayahLevel12Repository extends JpaRepository<WilayahLevel12, 
     @Query("SELECT w FROM WilayahLevel12 w WHERE LENGTH(w.kode) = 2 ORDER BY w.kode")
     List<WilayahLevel12> findAllProvinsi();
 
-    @Query("SELECT w FROM WilayahLevel12 w WHERE LENGTH(w.kode) = 5 AND w.parentKode = :provinsiKode ORDER BY w.kode")
+    @Query("SELECT w FROM WilayahLevel12 w WHERE LENGTH(w.kode) = 5 AND w.kode LIKE CONCAT(:provinsiKode, '.%') ORDER BY w.kode")
     List<WilayahLevel12> findKabupatenByProvinsi(@Param("provinsiKode") String provinsiKode);
 
-    @Query("SELECT w FROM WilayahLevel12 w WHERE LENGTH(w.kode) = 8 AND w.parentKode = :kabupatenKode ORDER BY w.kode")
+    @Query("SELECT w FROM WilayahLevel12 w WHERE LENGTH(w.kode) = 8 AND w.kode LIKE CONCAT(:kabupatenKode, '.%') ORDER BY w.kode")
     List<WilayahLevel12> findKecamatanByKabupaten(@Param("kabupatenKode") String kabupatenKode);
 
-    @Query("SELECT w FROM WilayahLevel12 w WHERE LENGTH(w.kode) = 13 AND w.parentKode = :kecamatanKode ORDER BY w.kode")
+    @Query("SELECT w FROM WilayahLevel12 w WHERE LENGTH(w.kode) = 13 AND w.kode LIKE CONCAT(:kecamatanKode, '.%') ORDER BY w.kode")
     List<WilayahLevel12> findDesaByKecamatan(@Param("kecamatanKode") String kecamatanKode);
 
     @Query("SELECT w FROM WilayahLevel12 w WHERE LOWER(w.nama) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY LENGTH(w.kode), w.kode")

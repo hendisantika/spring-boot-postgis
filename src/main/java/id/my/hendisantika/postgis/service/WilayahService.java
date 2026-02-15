@@ -1,12 +1,12 @@
 package id.my.hendisantika.postgis.service;
 
 import id.my.hendisantika.postgis.dto.BoundaryData;
-import id.my.hendisantika.postgis.entity.SubDistrict;
-import id.my.hendisantika.postgis.entity.Village;
 import id.my.hendisantika.postgis.entity.WilayahLevel12;
+import id.my.hendisantika.postgis.entity.WilayahLevel34;
 import id.my.hendisantika.postgis.repository.SubDistrictRepository;
 import id.my.hendisantika.postgis.repository.VillageRepository;
 import id.my.hendisantika.postgis.repository.WilayahLevel12Repository;
+import id.my.hendisantika.postgis.repository.WilayahLevel34Repository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +32,7 @@ import java.util.Optional;
 public class WilayahService {
 
     private final WilayahLevel12Repository wilayahRepository;
+    private final WilayahLevel34Repository wilayahLevel34Repository;
     private final SubDistrictRepository subDistrictRepository;
     private final VillageRepository villageRepository;
 
@@ -47,16 +48,20 @@ public class WilayahService {
         return wilayahRepository.findKabupatenByProvinsi(provinsiKode);
     }
 
-    public List<WilayahLevel12> getKecamatanByKabupaten(String kabupatenKode) {
-        return wilayahRepository.findKecamatanByKabupaten(kabupatenKode);
+    public List<WilayahLevel34> getKecamatanByKabupaten(String kabupatenKode) {
+        return wilayahLevel34Repository.findKecamatanByKabupaten(kabupatenKode);
     }
 
-    public List<WilayahLevel12> getDesaByKecamatan(String kecamatanKode) {
-        return wilayahRepository.findDesaByKecamatan(kecamatanKode);
+    public List<WilayahLevel34> getDesaByKecamatan(String kecamatanKode) {
+        return wilayahLevel34Repository.findDesaByKecamatan(kecamatanKode);
     }
 
     public Optional<WilayahLevel12> getByKode(String kode) {
         return wilayahRepository.findById(kode);
+    }
+
+    public Optional<WilayahLevel34> getLevel34ByKode(String kode) {
+        return wilayahLevel34Repository.findById(kode);
     }
 
     public List<WilayahLevel12> search(String keyword) {
@@ -65,6 +70,41 @@ public class WilayahService {
 
     public Optional<BoundaryData> getBoundaryData(String kode) {
         try {
+            int kodeLength = kode.length();
+
+            // Level 3 (kecamatan) or Level 4 (desa) - from wilayah_level_3_4
+            if (kodeLength >= 8) {
+                Optional<WilayahLevel34> w34 = getLevel34ByKode(kode);
+                if (w34.isEmpty()) {
+                    return Optional.empty();
+                }
+
+                WilayahLevel34 wilayah = w34.get();
+                BoundaryData.BoundaryDataBuilder builder = BoundaryData.builder()
+                        .kode(wilayah.getKode())
+                        .nama(wilayah.getNama())
+                        .level(wilayah.getLevelName())
+                        .lat(wilayah.getLat())
+                        .lng(wilayah.getLng());
+
+                // Get geometry from PostGIS tables
+                String geoJson = null;
+                if (kodeLength == 8) {
+                    geoJson = subDistrictRepository.findGeometryAsGeoJSON(kode);
+                } else if (kodeLength == 13) {
+                    geoJson = villageRepository.findGeometryAsGeoJSON(kode);
+                }
+
+                if (geoJson != null && !geoJson.isEmpty()) {
+                    builder.coordinates(geoJson);
+                } else if (wilayah.getPath() != null && !wilayah.getPath().isEmpty()) {
+                    builder.coordinates(wilayah.getPath());
+                }
+
+                return Optional.of(builder.build());
+            }
+
+            // Level 1 (provinsi) or Level 2 (kabupaten) - from wilayah_level_1_2
             Optional<WilayahLevel12> wilayahOpt = getByKode(kode);
             if (wilayahOpt.isEmpty()) {
                 return Optional.empty();
@@ -78,23 +118,7 @@ public class WilayahService {
                     .lat(wilayah.getLat())
                     .lng(wilayah.getLng());
 
-            // Try to get geometry from PostGIS tables based on kode length
-            String geoJson = null;
-            int kodeLength = kode.length();
-
-            if (kodeLength == 8) {
-                // Level 3 - Sub-district
-                geoJson = subDistrictRepository.findGeometryAsGeoJSON(kode);
-            } else if (kodeLength == 13) {
-                // Level 4 - Village
-                geoJson = villageRepository.findGeometryAsGeoJSON(kode);
-            }
-
-            // If we have geometry, add it
-            if (geoJson != null && !geoJson.isEmpty()) {
-                builder.coordinates(geoJson);
-            } else if (wilayah.getPath() != null && !wilayah.getPath().isEmpty()) {
-                // Fallback to path data if available
+            if (wilayah.getPath() != null && !wilayah.getPath().isEmpty()) {
                 builder.coordinates(wilayah.getPath());
             }
 

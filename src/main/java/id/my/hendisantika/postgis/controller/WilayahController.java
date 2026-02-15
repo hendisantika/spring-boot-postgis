@@ -60,8 +60,17 @@ public class WilayahController {
 
     @GetMapping("/detail/{kode}")
     public String getDetail(@PathVariable String kode, Model model) {
-        wilayahService.getByKode(kode).ifPresent(wilayah ->
-                model.addAttribute("wilayah", wilayah));
+        int kodeLength = kode.length();
+        if (kodeLength >= 8) {
+            // Kecamatan or Desa from wilayah_level_3_4
+            wilayahService.getLevel34ByKode(kode).ifPresent(wilayah -> {
+                model.addAttribute("wilayah34", wilayah);
+            });
+        } else {
+            // Provinsi or Kabupaten from wilayah_level_1_2
+            wilayahService.getByKode(kode).ifPresent(wilayah ->
+                    model.addAttribute("wilayah", wilayah));
+        }
         return "fragments/wilayah-detail :: wilayah-detail";
     }
 

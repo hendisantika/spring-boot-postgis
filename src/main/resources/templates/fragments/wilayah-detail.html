@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
     <div th:fragment="wilayah-detail">
+        <!-- Level 1/2: Provinsi or Kabupaten -->
         <div th:if="${wilayah != null}">
             <h4 class="w3-text-theme" th:text="${wilayah.nama}">Wilayah Name</h4>
 
@@ -15,9 +16,7 @@
                         <td class="w3-light-grey"><b>Level</b></td>
                         <td>
                             <span class="w3-tag w3-round"
-                                  th:classappend="${wilayah.level == 'Provinsi' ? 'w3-theme' :
-                                                  wilayah.level == 'Kabupaten/Kota' ? 'w3-green' :
-                                                  wilayah.level == 'Kecamatan' ? 'w3-blue' : 'w3-orange'}"
+                                  th:classappend="${wilayah.level == 'Provinsi' ? 'w3-theme' : 'w3-green'}"
                                   th:text="${wilayah.level}">
                                 Level
                             </span>
@@ -67,7 +66,48 @@
             </button>
         </div>
 
-        <div th:if="${wilayah == null}" class="w3-text-grey w3-center">
+        <!-- Level 3/4: Kecamatan or Desa -->
+        <div th:if="${wilayah34 != null}">
+            <h4 class="w3-text-theme" th:text="${wilayah34.nama}">Wilayah Name</h4>
+
+            <table class="w3-table w3-bordered w3-small">
+                <tbody>
+                    <tr>
+                        <td class="w3-light-grey"><b>Kode</b></td>
+                        <td th:text="${wilayah34.kode}">Code</td>
+                    </tr>
+                    <tr>
+                        <td class="w3-light-grey"><b>Level</b></td>
+                        <td>
+                            <span class="w3-tag w3-round"
+                                  th:classappend="${wilayah34.levelName == 'Kecamatan' ? 'w3-blue' : 'w3-orange'}"
+                                  th:text="${wilayah34.levelName}">
+                                Level
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${wilayah34.lat != null and wilayah34.lng != null}">
+                        <td class="w3-light-grey"><b>Koordinat</b></td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(wilayah34.lat, 1, 4)}">Lat</span>,
+                            <span th:text="${#numbers.formatDecimal(wilayah34.lng, 1, 4)}">Lng</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${wilayah34.parentKode != null}">
+                        <td class="w3-light-grey"><b>Parent</b></td>
+                        <td th:text="${wilayah34.parentKode}">Parent</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="w3-button w3-theme w3-block w3-margin-top"
+                    onclick="focusOnMap()">
+                <i class="fa fa-map-marker-alt"></i> Lihat di Peta
+            </button>
+        </div>
+
+        <!-- No data -->
+        <div th:if="${wilayah == null and wilayah34 == null}" class="w3-text-grey w3-center">
             <p><i class="fa fa-arrow-up"></i> Pilih wilayah untuk melihat detail</p>
         </div>
     </div>

@@ -32,11 +32,8 @@ public class WilayahLevel12 {
     @Column(name = "nama", length = 255)
     private String nama;
 
-    @Column(name = "ibukota", length = 255)
+    @Column(name = "ibukota", length = 100)
     private String ibukota;
-
-    @Column(name = "parent_kode", length = 13)
-    private String parentKode;
 
     @Column(name = "lat")
     private Double lat;
@@ -54,7 +51,7 @@ public class WilayahLevel12 {
     private Double luas;
 
     @Column(name = "penduduk")
-    private Integer penduduk;
+    private Double penduduk;
 
     @Column(name = "path", columnDefinition = "TEXT")
     private String path;
