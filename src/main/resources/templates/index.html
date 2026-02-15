@@ -253,19 +253,36 @@
                             // Display boundary if available
                             if (data.coordinates) {
                                 try {
-                                    const geoJson = JSON.parse(data.coordinates);
-                                    const layer = L.geoJSON(geoJson, {
-                                        style: {
+                                    const parsed = JSON.parse(data.coordinates);
+                                    let layer;
+
+                                    if (parsed.type && parsed.coordinates) {
+                                        // GeoJSON format (from PostGIS ST_AsGeoJSON)
+                                        layer = L.geoJSON(parsed, {
+                                            style: {
+                                                color: '#3388ff',
+                                                fillColor: '#3388ff',
+                                                fillOpacity: 0.2,
+                                                weight: 2
+                                            }
+                                        })
+                                        .bindPopup(`<b>${data.nama}</b><br>${data.level}`)
+                                        .addTo(boundaryLayer);
+                                    } else if (Array.isArray(parsed)) {
+                                        // Coordinate array from path field [[[lat, lng], ...]]
+                                        layer = L.polygon(parsed, {
                                             color: '#3388ff',
                                             fillColor: '#3388ff',
                                             fillOpacity: 0.2,
                                             weight: 2
-                                        }
-                                    })
-                                    .bindPopup(`<b>${data.nama}</b><br>${data.level}`)
-                                    .addTo(boundaryLayer);
+                                        })
+                                        .bindPopup(`<b>${data.nama}</b><br>${data.level}`)
+                                        .addTo(boundaryLayer);
+                                    }
 
-                                    map.fitBounds(layer.getBounds(), {padding: [50, 50]});
+                                    if (layer) {
+                                        map.fitBounds(layer.getBounds(), {padding: [50, 50]});
+                                    }
                                 } catch (e) {
                                     console.error('Error parsing boundary:', e);
                                     if (data.lat && data.lng) {
