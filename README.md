@@ -2,6 +2,26 @@
 
 Interactive map application for exploring Indonesia's administrative boundaries (provinces, cities/regencies, sub-districts, and villages) powered by **Spring Boot**, **PostGIS**, and **Leaflet.js**.
 
+## Screenshots
+
+### Home Page
+![Home Page](img/index.png)
+
+### Provinsi (Province) - Jawa Barat
+![Provinsi](img/provinsi.png)
+
+### Kabupaten (Regency) - Kabupaten Bandung
+![Kabupaten](img/kabupaten.png)
+
+### Kecamatan (Sub-district) - Banjaran
+![Kecamatan](img/kecamatan.png)
+
+### Desa/Kelurahan (Village) - Kamasan
+![Desa](img/desa.png)
+
+### Wilayah Indonesia Overview
+![Wilayah Indonesia](img/wilayah_indo.png)
+
 ## Features
 
 - Interactive map with boundary visualization using Leaflet.js
