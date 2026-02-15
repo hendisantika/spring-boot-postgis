@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.locationtech.jts.geom.Geometry;
 
-import java.math.BigDecimal;
-
 /**
  * Created by IntelliJ IDEA.
  * Project : spring-boot-postgis
@@ -22,7 +20,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "all_villages")
+@Table(name = "all_villages_2023")
 public class Village {
 
     @Id
@@ -33,60 +31,30 @@ public class Village {
     @Column(name = "geom", columnDefinition = "geometry(Geometry,4326)")
     private Geometry geom;
 
-    @Column(name = "shape_leng", precision = 18, scale = 11)
-    private BigDecimal shapeLeng;
+    @Column(name = "kode_kd", length = 50)
+    private String kodeKd;
 
-    @Column(name = "shape_area", precision = 18, scale = 11)
-    private BigDecimal shapeArea;
+    @Column(name = "kode_kec", length = 50)
+    private String kodeKec;
 
-    @Column(name = "adm4_en", length = 75)
-    private String adm4En;
+    @Column(name = "kode_kk", length = 50)
+    private String kodeKk;
 
-    @Column(name = "adm4_pcode", length = 25)
-    private String adm4Pcode;
+    @Column(name = "kode_prov", length = 50)
+    private String kodeProv;
 
-    @Column(name = "adm4_ref", length = 75)
-    private String adm4Ref;
+    @Column(name = "kel_desa", length = 50)
+    private String kelDesa;
 
-    @Column(name = "adm4alt1en", length = 75)
-    private String adm4alt1en;
+    @Column(name = "kecamatan", length = 50)
+    private String kecamatan;
 
-    @Column(name = "adm4alt2en", length = 75)
-    private String adm4alt2en;
+    @Column(name = "kab_kota", length = 50)
+    private String kabKota;
 
-    @Column(name = "adm3_en", length = 75)
-    private String adm3En;
+    @Column(name = "provinsi", length = 50)
+    private String provinsi;
 
-    @Column(name = "adm3_pcode", length = 25)
-    private String adm3Pcode;
-
-    @Column(name = "adm2_en", length = 75)
-    private String adm2En;
-
-    @Column(name = "adm2_pcode", length = 25)
-    private String adm2Pcode;
-
-    @Column(name = "adm1_en", length = 75)
-    private String adm1En;
-
-    @Column(name = "adm1_pcode", length = 25)
-    private String adm1Pcode;
-
-    @Column(name = "adm0_en", length = 75)
-    private String adm0En;
-
-    @Column(name = "adm0_pcode", length = 25)
-    private String adm0Pcode;
-
-    @Column(name = "date", length = 10)
-    private String date;
-
-    @Column(name = "validon", length = 10)
-    private String validon;
-
-    @Column(name = "validto", length = 10)
-    private String validto;
-
-    @Column(name = "kode", length = 13)
-    private String kode;
+    @Column(name = "jenis_kd", length = 254)
+    private String jenisKd;
 }

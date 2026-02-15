@@ -21,8 +21,8 @@ import java.util.Optional;
 @Repository
 public interface VillageRepository extends JpaRepository<Village, Integer> {
 
-    Optional<Village> findByKode(String kode);
+    Optional<Village> findByKodeKd(String kodeKd);
 
-    @Query(value = "SELECT ST_AsGeoJSON(geom) FROM all_villages WHERE kode = :kode LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT ST_AsGeoJSON(geom) FROM all_villages_2023 WHERE kode_kd = :kode LIMIT 1", nativeQuery = true)
     String findGeometryAsGeoJSON(@Param("kode") String kode);
 }

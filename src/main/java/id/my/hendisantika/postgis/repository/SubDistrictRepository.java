@@ -21,8 +21,8 @@ import java.util.Optional;
 @Repository
 public interface SubDistrictRepository extends JpaRepository<SubDistrict, Integer> {
 
-    Optional<SubDistrict> findByKode(String kode);
+    Optional<SubDistrict> findByKodeKec(String kodeKec);
 
-    @Query(value = "SELECT ST_AsGeoJSON(geom) FROM idn_admbnda_adm3_bps_20200401 WHERE kode = :kode LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT ST_AsGeoJSON(geom) FROM idn_admbnda_adm3_2023 WHERE kode_kec = :kode LIMIT 1", nativeQuery = true)
     String findGeometryAsGeoJSON(@Param("kode") String kode);
 }
