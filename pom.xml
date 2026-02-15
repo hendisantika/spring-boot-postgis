@@ -28,7 +28,7 @@
     </scm>
     <properties>
         <java.version>25</java.version>
-        <hibernate-spatial.version>7.0.0.Final</hibernate-spatial.version>
+        <hibernate-spatial.version>7.2.4.Final</hibernate-spatial.version>
         <thymeleaf-layout-dialect.version>3.4.0</thymeleaf-layout-dialect.version>
         <webjars-htmx.version>2.0.8</webjars-htmx.version>
         <webjars-leaflet.version>1.9.4</webjars-leaflet.version>
