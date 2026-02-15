@@ -26,20 +26,22 @@ Interactive map application for exploring Indonesia's administrative boundaries 
 
 - Interactive map with boundary visualization using Leaflet.js
 - Hierarchical drill-down: Provinsi → Kabupaten/Kota → Kecamatan → Desa/Kelurahan
+- Kabupaten boundaries computed dynamically via PostGIS `ST_Union` of kecamatan geometries
 - Search across all administrative levels
 - GeoJSON boundary rendering on map selection
 - HTMX-powered dynamic UI with Thymeleaf templates
+- Customizable color themes with localStorage persistence
 
 ## Tech Stack
 
-| Layer       | Technology                                    |
-|-------------|-----------------------------------------------|
-| Framework   | Spring Boot 4.0.2, Java 25                    |
-| Database    | PostgreSQL + PostGIS                          |
-| ORM         | Hibernate Spatial 7.0                         |
-| Migrations  | Flyway                                        |
-| Frontend    | Thymeleaf, HTMX 2.0, Leaflet 1.9.4, W3.CSS   |
-| Build       | Maven                                         |
+| Layer       | Technology                                              |
+|-------------|---------------------------------------------------------|
+| Framework   | Spring Boot 4.0.2, Java 25                              |
+| Database    | PostgreSQL + PostGIS                                    |
+| ORM         | Hibernate Spatial 7.2.4.Final                           |
+| Migrations  | Flyway                                                  |
+| Frontend    | Thymeleaf + Layout Dialect 3.4.0, HTMX 2.0.8, Leaflet 1.9.4, W3.CSS |
+| Build       | Maven                                                   |
 
 ## Data Source
 
@@ -122,22 +124,45 @@ src/main/resources/
 │   ├── layout.html
 │   ├── index.html
 │   └── fragments/
-└── static/js/map.js                 # Leaflet map initialization
+│       ├── kabupaten-select.html
+│       ├── kecamatan-select.html
+│       ├── desa-select.html
+│       └── wilayah-detail.html
+└── static/
+    ├── favicon.svg                  # Map pin SVG favicon
+    └── js/map.js                    # Leaflet map initialization
 ```
 
 ## API Endpoints
 
-| Method | Path                                  | Description                          |
-|--------|---------------------------------------|--------------------------------------|
-| GET    | `/`                                   | Home page with interactive map       |
-| GET    | `/wilayah/provinsi`                   | List all provinces (HTMX fragment)   |
-| GET    | `/wilayah/kabupaten/{provinsiKode}`   | Cities by province (HTMX fragment)   |
-| GET    | `/wilayah/kecamatan/{kabupatenKode}`  | Sub-districts by city (HTMX fragment)|
-| GET    | `/wilayah/desa/{kecamatanKode}`       | Villages by sub-district (HTMX)      |
-| GET    | `/wilayah/search?keyword=...`         | Search across all levels             |
-| GET    | `/wilayah/detail/{kode}`              | Detail info for a region             |
-| GET    | `/wilayah/api/boundary/{kode}`        | GeoJSON boundary data (JSON)         |
-| GET    | `/wilayah/api/all`                    | All provinces with metadata (JSON)   |
+### Pages
+
+| Method | Path   | Description                    |
+|--------|--------|--------------------------------|
+| GET    | `/`    | Home page with interactive map |
+| GET    | `/map` | Map view                       |
+
+### HTMX Fragment Endpoints
+
+| Method | Path                                        | Description                        |
+|--------|---------------------------------------------|------------------------------------|
+| GET    | `/wilayah/provinsi`                         | List all provinces                 |
+| GET    | `/wilayah/kabupaten/{provinsiKode}`         | Cities by province                 |
+| GET    | `/wilayah/kecamatan/{kabupatenKode}`        | Sub-districts by city              |
+| GET    | `/wilayah/desa/{kecamatanKode}`             | Villages by sub-district           |
+| GET    | `/wilayah/kabupaten-select/{provinsiKode}`  | Kabupaten select dropdown fragment |
+| GET    | `/wilayah/kecamatan-select/{kabupatenKode}` | Kecamatan select dropdown fragment |
+| GET    | `/wilayah/desa-select/{kecamatanKode}`      | Desa select dropdown fragment      |
+| GET    | `/wilayah/detail/{kode}`                    | Detail info panel for a region     |
+| GET    | `/wilayah/search?keyword=...`               | Search across all levels           |
+
+### REST API Endpoints
+
+| Method | Path                             | Description                          |
+|--------|----------------------------------|--------------------------------------|
+| GET    | `/wilayah/api/all`               | All provinces with metadata (JSON)   |
+| GET    | `/wilayah/api/boundary/{kode}`   | GeoJSON boundary data (JSON)         |
+| GET    | `/wilayah/api/boundaries/{kode}` | Boundaries for child regions (JSON)  |
 
 ## License
 
