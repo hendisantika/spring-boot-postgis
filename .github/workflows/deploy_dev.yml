@@ -1,0 +1,234 @@
+name: Deploy Dev
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/deploy_dev.yml'
+      - 'Dockerfile'
+      - 'pom.xml'
+
+env:
+  DOCKER_USERNAME: hendisantika
+  DOCKER_IMAGE_NAME: postgis
+  DEPLOY_HOST: 103.31.204.189
+  DEPLOY_USER: deployer
+  DEPLOY_PATH: /home/deployer/postgis
+  # Database Configuration
+  DB_HOST: localhost
+  DB_PORT: 5433
+  DB_NAME: indonesia_maps
+  # Application Configuration
+  SERVER_PORT: 8000
+  SPRING_PROFILE: dev
+
+jobs:
+  # Detect what changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'src/**'
+              - 'Dockerfile'
+              - 'pom.xml'
+              - '.github/workflows/deploy_dev.yml'
+  #            frontend:
+  #              - 'frontend/**'
+  #              - 'Dockerfile.frontend'
+  #              - '.github/workflows/deploy_dev.yml'
+
+  # ============================================================================
+  # BACKEND JOBS (Spring Boot)
+  # ============================================================================
+  build-backend:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          lfs: false
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache Maven packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build with Maven
+        run: mvn -B clean package -DskipTests -Dmaven.test.skip=true --file pom.xml
+
+      - name: Verify JAR was created
+        run: ls -lh target/*.jar
+
+      - name: Extract version from pom.xml
+        id: version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Update dependency graph
+        uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-backend:
+    runs-on: ubuntu-latest
+    needs: [ changes, build-backend ]
+    if: needs.changes.outputs.backend == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          lfs: false
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B clean package -DskipTests -Dmaven.test.skip=true --file pom.xml
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ github.run_number }}
+            type=sha,prefix={{branch}}-
+            type=ref,event=branch
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+          build-args: |
+            GIT_COMMIT_MESSAGE=${{ github.event.head_commit.message }}
+            GIT_VERSION_HASH=${{ github.sha }}
+
+  deploy-backend:
+    needs: [ changes, docker-backend ]
+    if: needs.changes.outputs.backend == 'true'
+    name: Deploy Backend to Dev Server
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check SSH server connectivity
+        run: |
+          echo "Testing connectivity to SSH server..."
+          echo "Host: ${{ env.DEPLOY_HOST }}"
+          echo "Port: 22"
+
+          if timeout 10 bash -c "cat < /dev/null > /dev/tcp/${{ env.DEPLOY_HOST }}/22"; then
+            echo "✓ Port is reachable"
+          else
+            echo "✗ Port is NOT reachable - SSH server may be behind firewall"
+            echo "GitHub Actions IP ranges need to be whitelisted on your server"
+            echo "See: https://api.github.com/meta for GitHub IP ranges"
+          fi
+
+      - name: Deploy to Dev Server
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 120s
+          command_timeout: 30m
+          debug: false
+          script: |
+            mkdir -p ${{ env.DEPLOY_PATH }}
+            cd ${{ env.DEPLOY_PATH }}
+
+            docker pull ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.run_number }}
+
+            docker stop postgis || true
+            docker rm postgis || true
+
+            docker run -d \
+              --name postgis \
+              --restart unless-stopped \
+              -p ${{ env.SERVER_PORT }}:${{ env.SERVER_PORT }} \
+              -e SPRING_PROFILES_ACTIVE="${{ env.SPRING_PROFILE }}" \
+              -e DB_URL="${{ vars.DB_URL }}" \
+              -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              -e SERVER_PORT="${{ env.SERVER_PORT }}" \
+              --network host \
+              ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.run_number }}
+
+            docker image prune -f
+            docker ps | grep postgis
+
+            sleep 10
+            curl -f http://localhost:${{ env.SERVER_PORT }}/actuator/health || curl -f http://localhost:${{ env.SERVER_PORT }}/ || echo "Warning: Health check failed"
+
+      - name: Backend Deployment Summary
+        run: |
+          echo "## Backend Deployment Complete! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Server:** \`${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Port:** \`${{ env.SERVER_PORT }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Access URLs:" >> $GITHUB_STEP_SUMMARY
+          echo "- Public: https://map.persislabs.my.id" >> $GITHUB_STEP_SUMMARY
+          echo "- Health: https://map.persislabs.my.id/actuator/health" >> $GITHUB_STEP_SUMMARY
