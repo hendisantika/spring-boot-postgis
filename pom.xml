@@ -99,10 +99,10 @@
             <version>1.20.0</version>
         </dependency>
 
-        <!-- Flyway for database migrations -->
+        <!-- Flyway for database migrations (Spring Boot 4.x requires the starter) -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
