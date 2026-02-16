@@ -186,6 +186,10 @@ jobs:
 
       - name: Deploy to Dev Server
         uses: appleboy/ssh-action@v1.2.5
+        env:
+          DB_URL: ${{ vars.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         with:
           host: ${{ env.DEPLOY_HOST }}
           username: ${{ env.DEPLOY_USER }}
@@ -194,6 +198,7 @@ jobs:
           timeout: 120s
           command_timeout: 30m
           debug: false
+          envs: DB_URL,DB_USERNAME,DB_PASSWORD
           script: |
             mkdir -p ${{ env.DEPLOY_PATH }}
             cd ${{ env.DEPLOY_PATH }}
@@ -203,23 +208,27 @@ jobs:
             docker stop postgis || true
             docker rm postgis || true
 
+            printf '%s\n' \
+              "SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILE }}" \
+              "DB_URL=${DB_URL}" \
+              "DB_USERNAME=${DB_USERNAME}" \
+              "DB_PASSWORD=${DB_PASSWORD}" \
+              "SERVER_PORT=${{ env.SERVER_PORT }}" \
+              > /tmp/postgis.env
+
             docker run -d \
               --name postgis \
               --restart unless-stopped \
-              -p ${{ env.SERVER_PORT }}:${{ env.SERVER_PORT }} \
-              -e SPRING_PROFILES_ACTIVE="${{ env.SPRING_PROFILE }}" \
-              -e DB_URL="${{ vars.DB_URL }}" \
-              -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
-              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-              -e SERVER_PORT="${{ env.SERVER_PORT }}" \
               --network host \
+              --env-file /tmp/postgis.env \
               ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.run_number }}
 
+            rm -f /tmp/postgis.env
             docker image prune -f
             docker ps | grep postgis
 
             sleep 10
-            curl -f http://localhost:${{ env.SERVER_PORT }}/actuator/health || curl -f http://localhost:${{ env.SERVER_PORT }}/ || echo "Warning: Health check failed"
+            curl -f http://localhost:${{ env.SERVER_PORT }}/ || echo "Warning: Health check failed"
 
       - name: Backend Deployment Summary
         run: |
