@@ -65,7 +65,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          lfs: false
+          lfs: true
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -108,7 +108,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          lfs: false
+          lfs: true
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
